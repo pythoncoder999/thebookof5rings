@@ -478,18 +478,27 @@ const REFLECT_PROMPTS = [
 const STORAGE_PREFIX = "5rings:day:";
 let currentIndex = null;
 
-async function getStatus(i){
-  try{
-    const r = await window.storage.get(STORAGE_PREFIX + i);
-    return r ? JSON.parse(r.value) : {done:false, reflection:"", date:null};
-  }catch(e){
-    return {done:false, reflection:"", date:null};
-  }
+// Single in-memory source of truth. The UI always reads/writes this array
+// directly and re-renders synchronously from it, so what you see on screen
+// can never drift out of sync with a slower background storage write.
+let statusCache = DAYS.map(()=>({done:false, reflection:"", date:null}));
+
+async function loadAllStatuses(){
+  const results = await Promise.all(DAYS.map(async (_, i)=>{
+    try{
+      const r = await window.storage.get(STORAGE_PREFIX + i, false);
+      return r ? JSON.parse(r.value) : {done:false, reflection:"", date:null};
+    }catch(e){
+      return {done:false, reflection:"", date:null};
+    }
+  }));
+  statusCache = results;
 }
-async function setStatus(i, status){
-  try{
-    await window.storage.set(STORAGE_PREFIX + i, JSON.stringify(status));
-  }catch(e){ /* ignore */ }
+
+function persistStatus(i){
+  // Fire-and-forget: storage writes happen in the background and never
+  // block or delay the on-screen update, which already reflects statusCache.
+  window.storage.set(STORAGE_PREFIX + i, JSON.stringify(statusCache[i]), false).catch(()=>{});
 }
 
 function groupByBook(){
@@ -505,13 +514,11 @@ function groupByBook(){
   return groups;
 }
 
-async function renderGrid(){
+function renderGrid(){
   const container = document.getElementById('groups');
   container.innerHTML = "";
   const groups = groupByBook();
-  let doneCount = 0;
-  const statuses = await Promise.all(DAYS.map((_,i)=>getStatus(i)));
-  statuses.forEach(s=>{ if(s.done) doneCount++; });
+  const doneCount = statusCache.filter(s=>s.done).length;
 
   groups.forEach(g=>{
     const section = document.createElement('div');
@@ -523,7 +530,7 @@ async function renderGrid(){
     grid.className = 'grid';
     g.items.forEach(item=>{
       const tile = document.createElement('div');
-      const st = statuses[item.index];
+      const st = statusCache[item.index];
       tile.className = 'tile' + (st.done ? ' done' : '');
       tile.innerHTML = `
         <div class="seal-mark">読</div>
@@ -537,10 +544,11 @@ async function renderGrid(){
     container.appendChild(section);
   });
 
+  const pct = Math.round((doneCount/DAYS.length)*100);
   document.getElementById('statDone').textContent = doneCount;
-  document.getElementById('statPct').textContent = Math.round((doneCount/DAYS.length)*100) + "%";
-  document.getElementById('scrollFill').style.width = Math.round((doneCount/DAYS.length)*100) + "%";
-  document.getElementById('statStreak').textContent = computeStreak(statuses);
+  document.getElementById('statPct').textContent = pct + "%";
+  document.getElementById('scrollFill').style.width = pct + "%";
+  document.getElementById('statStreak').textContent = computeStreak(statusCache);
 }
 
 function computeStreak(statuses){
@@ -559,7 +567,7 @@ function computeStreak(statuses){
   return maxStreak;
 }
 
-async function openDay(i){
+function openDay(i){
   currentIndex = i;
   const d = DAYS[i];
   document.getElementById('sheetBook').textContent = d.book + " · Day " + (i+1) + " of " + DAYS.length;
@@ -569,7 +577,7 @@ async function openDay(i){
   document.getElementById('reflectLabel').textContent = REFLECT_PROMPTS[i] || "Your reflection";
   document.getElementById('saveNote').textContent = "";
 
-  const status = await getStatus(i);
+  const status = statusCache[i];
   document.getElementById('reflectInput').value = status.reflection || "";
   const btn = document.getElementById('markBtn');
   btn.textContent = status.done ? "Sealed — tap to unseal" : "Seal this day as read";
@@ -588,35 +596,39 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id === 'overlay') closeDay();
 });
 
-document.getElementById('markBtn').addEventListener('click', async ()=>{
+document.getElementById('markBtn').addEventListener('click', ()=>{
   if(currentIndex === null) return;
-  const status = await getStatus(currentIndex);
+  const status = statusCache[currentIndex];
   const reflection = document.getElementById('reflectInput').value;
   const newDone = !status.done;
   const today = new Date().toISOString().slice(0,10);
-  const newStatus = {done:newDone, reflection, date: newDone ? today : status.date};
-  await setStatus(currentIndex, newStatus);
+  statusCache[currentIndex] = {done:newDone, reflection, date: newDone ? today : status.date};
+
   const btn = document.getElementById('markBtn');
   btn.textContent = newDone ? "Sealed — tap to unseal" : "Seal this day as read";
   btn.className = "mark-btn" + (newDone ? " done" : "");
   document.getElementById('saveNote').textContent = newDone ? "Saved to your reading log." : "Unsealed.";
-  await renderGrid();
+
+  renderGrid(); // reads statusCache synchronously, so the % and streak update immediately
+  persistStatus(currentIndex); // background write, doesn't block the UI
 });
 
 let saveTimer = null;
 document.getElementById('reflectInput').addEventListener('input', ()=>{
   if(currentIndex === null) return;
+  statusCache[currentIndex].reflection = document.getElementById('reflectInput').value;
   clearTimeout(saveTimer);
   document.getElementById('saveNote').textContent = "Saving...";
-  saveTimer = setTimeout(async ()=>{
-    const status = await getStatus(currentIndex);
-    status.reflection = document.getElementById('reflectInput').value;
-    await setStatus(currentIndex, status);
+  saveTimer = setTimeout(()=>{
+    persistStatus(currentIndex);
     document.getElementById('saveNote').textContent = "Reflection saved.";
   }, 700);
 });
 
-renderGrid();
+(async function init(){
+  await loadAllStatuses();
+  renderGrid();
+})();
 </script>
 </body>
 </html>
