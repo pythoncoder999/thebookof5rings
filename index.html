@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Book of Five Rings — A 21-Day Reading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #ECE4D3;
+    --paper-deep: #E1D6BE;
+    --ink: #211F1C;
+    --ink-soft: #55503F;
+    --indigo: #2B4159;
+    --indigo-deep: #1B2C3E;
+    --seal: #A23B2E;
+    --gold: #A9863F;
+    --line: rgba(33,31,28,0.16);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.35), transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Crimson Pro', Georgia, serif;
+    min-height:100vh;
+  }
+  .texture{
+    position:fixed; inset:0; pointer-events:none; opacity:0.5; z-index:0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 3px);
+  }
+  .wrap{position:relative; z-index:1; max-width:900px; margin:0 auto; padding:48px 24px 100px;}
+
+  header{margin-bottom:44px;}
+  .kanji{
+    font-family:'Shippori Mincho', serif;
+    font-size:15px;
+    letter-spacing:0.5em;
+    color:var(--seal);
+    margin:0 0 6px 2px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:clamp(32px, 5vw, 48px);
+    line-height:1.15;
+    margin:0 0 10px;
+    color:var(--indigo-deep);
+  }
+  .byline{
+    font-size:17px;
+    color:var(--ink-soft);
+    font-style:italic;
+    margin:0 0 28px;
+    max-width:60ch;
+  }
+
+  .status-bar{
+    display:flex; align-items:center; gap:28px;
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:16px 2px; margin-bottom:36px; flex-wrap:wrap;
+  }
+  .stat{display:flex; flex-direction:column; gap:2px;}
+  .stat .num{font-family:'Shippori Mincho',serif; font-size:26px; color:var(--indigo);}
+  .stat .lbl{font-size:12.5px; letter-spacing:0.03em; color:var(--ink-soft);}
+  .scroll-track{
+    flex:1; min-width:180px; height:6px; background:var(--paper-deep);
+    border-radius:3px; overflow:hidden; position:relative;
+  }
+  .scroll-fill{
+    height:100%; background:linear-gradient(90deg, var(--gold), var(--seal));
+    width:0%; transition:width 0.6s ease;
+  }
+
+  .book-group{margin-bottom:38px;}
+  .book-group h2{
+    font-family:'Shippori Mincho', serif;
+    font-size:14px;
+    letter-spacing:0.14em;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    margin:0 0 14px;
+    padding-left:2px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .book-group h2::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:12px;
+  }
+
+  .tile{
+    position:relative;
+    background:linear-gradient(180deg, #F4EEDF, #E9DFC9);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px 14px 14px;
+    cursor:pointer;
+    min-height:104px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 2px 4px rgba(33,31,28,0.06);
+  }
+  .tile:hover{transform:translateY(-2px); border-color:var(--gold); box-shadow:0 6px 14px rgba(33,31,28,0.12);}
+  .tile:active{transform:translateY(0);}
+  .tile .day-no{
+    font-family:'Shippori Mincho', serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:0.08em;
+  }
+  .tile .day-title{
+    font-size:15px;
+    line-height:1.3;
+    color:var(--ink);
+    margin-top:8px;
+  }
+  .seal-mark{
+    position:absolute; top:10px; right:10px;
+    width:26px; height:26px; border-radius:3px;
+    background:var(--seal); color:#F4EEDF;
+    display:none; align-items:center; justify-content:center;
+    font-family:'Shippori Mincho', serif; font-size:13px;
+    transform:rotate(-8deg);
+    box-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+  .tile.done .seal-mark{display:flex;}
+  .tile.done{background:linear-gradient(180deg, #F2ECDD, #E5DAC0);}
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(20,18,15,0.55);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:40px 16px; overflow-y:auto; z-index:10;
+  }
+  .overlay.open{display:flex;}
+  .sheet{
+    background:#F6F0E2;
+    max-width:680px; width:100%;
+    border-radius:4px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+    position:relative;
+    animation:unroll 0.28s ease;
+    border:1px solid var(--line);
+  }
+  @keyframes unroll{
+    from{opacity:0; transform:translateY(14px) scaleY(0.97);}
+    to{opacity:1; transform:translateY(0) scaleY(1);}
+  }
+  .sheet-inner{padding:38px 40px 40px;}
+  .sheet-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:6px; gap:16px;
+  }
+  .sheet-book{
+    font-size:12.5px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--gold); font-family:'Shippori Mincho',serif;
+  }
+  .sheet-title{
+    font-family:'Shippori Mincho', serif;
+    font-size:26px; color:var(--indigo-deep); margin:6px 0 22px; line-height:1.25;
+  }
+  .close-btn{
+    background:none; border:none; font-size:22px; line-height:1; color:var(--ink-soft);
+    cursor:pointer; padding:4px 8px; border-radius:3px;
+  }
+  .close-btn:hover{color:var(--ink); background:var(--paper-deep);}
+  .sheet-body p{
+    font-size:18px; line-height:1.7; color:var(--ink); margin:0 0 16px;
+  }
+  .sheet-body p:first-of-type::first-letter{
+    font-family:'Shippori Mincho', serif;
+    font-size:44px; float:left; line-height:0.8; padding:6px 8px 0 0;
+    color:var(--indigo);
+  }
+  .quote-box{
+    border-left:3px solid var(--seal);
+    background:rgba(162,59,46,0.06);
+    padding:14px 18px;
+    margin:26px 0;
+    font-style:italic;
+    color:var(--indigo-deep);
+    font-size:17px;
+  }
+  .reflect{
+    margin-top:30px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+  }
+  .reflect label{
+    display:block; font-size:13px; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:10px;
+  }
+  .reflect textarea{
+    width:100%; min-height:80px; resize:vertical;
+    font-family:'Crimson Pro', Georgia, serif; font-size:16px;
+    padding:12px 14px; border:1px solid var(--line); border-radius:3px;
+    background:#FBF7EE; color:var(--ink);
+  }
+  .reflect textarea:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  .sheet-actions{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:24px; gap:12px; flex-wrap:wrap;
+  }
+  .save-note{font-size:13px; color:var(--ink-soft); min-height:16px;}
+  .mark-btn{
+    background:var(--indigo); color:#F4EEDF; border:none;
+    font-family:'Shippori Mincho', serif; font-size:15px;
+    padding:12px 22px; border-radius:3px; cursor:pointer;
+    letter-spacing:0.03em;
+    transition:background 0.15s ease;
+  }
+  .mark-btn:hover{background:var(--indigo-deep);}
+  .mark-btn.done{background:var(--seal);}
+
+  footer{
+    text-align:center; color:var(--ink-soft); font-size:13px;
+    margin-top:50px; padding-top:24px; border-top:1px solid var(--line);
+  }
+
+  @media (max-width:480px){
+    .sheet-inner{padding:28px 22px 30px;}
+    .sheet-title{font-size:22px;}
+  }
+</style>
+</head>
+<body>
+<div class="texture"></div>
+<div class="wrap">
+
+  <header>
+    <p class="kanji">五 輪 書</p>
+    <h1>The Book of Five Rings</h1>
+    <p class="byline">Miyamoto Musashi's treatise on strategy, read one sitting at a time. Twenty-one days, five books, one warrior's whole life of practice. Tap a tile to open the day's reading.</p>
+
+    <div class="status-bar">
+      <div class="stat"><span class="num" id="statDone">0</span><span class="lbl">days read</span></div>
+      <div class="stat"><span class="num" id="statStreak">0</span><span class="lbl">day streak</span></div>
+      <div class="scroll-track"><div class="scroll-fill" id="scrollFill"></div></div>
+      <div class="stat"><span class="num" id="statPct">0%</span><span class="lbl">of the scroll</span></div>
+    </div>
+  </header>
+
+  <div id="groups"></div>
+
+  <footer>Text adapted from the public-domain Feedbooks edition of <em>The Book of Five Rings</em>. Your reading progress and reflections are stored only on this device.</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-book" id="sheetBook"></div>
+          <div class="sheet-title" id="sheetTitle"></div>
+        </div>
+        <button class="close-btn" id="closeBtn" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-body" id="sheetBody"></div>
+      <div class="quote-box" id="sheetQuote"></div>
+      <div class="reflect">
+        <label for="reflectInput" id="reflectLabel">Your reflection</label>
+        <textarea id="reflectInput" placeholder="What in today's reading is worth carrying with you?"></textarea>
+      </div>
+      <div class="sheet-actions">
+        <span class="save-note" id="saveNote"></span>
+        <button class="mark-btn" id="markBtn">Seal this day as read</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = [
+{book:"Prologue", title:"A Life Spent Winning", quote:"I came to realize the Way of Strategy when I was fifty.",
+ body:[
+ "Musashi wrote this book at sixty, alone on Mount Iwato, having climbed there to kneel before Buddha and pay homage to heaven. He tells us plainly who he is: a warrior of Harima province, and a man who has never followed a teacher.",
+ "His first duel was at thirteen — he struck down a strategist of the Shinto school. At sixteen, another. By twenty-one he was traveling the provinces, dueling any strategist he met, and by twenty-nine he had fought roughly sixty encounters without a single loss.",
+ "But at thirty he looked back and was unsatisfied. Winning, he realized, had come from natural ability and luck, not mastery. So he spent the next twenty years training morning and evening, searching for the actual principle behind victory — and only at fifty did he feel he understood it.",
+ "This book uses no borrowed authority: not Buddhist law, not Confucius, not old war chronicles. It is one man's account of what he found through his own body."
+ ]},
+
+{book:"Ground Book", title:"The Way of the Warrior", quote:"The Way of the warrior is resolute acceptance of death.",
+ body:[
+ "Musashi opens by insisting that almost no one alive truly understands strategy. Many who call themselves strategists are simply skilled sword-fencers — they've mistaken a technique for a Way.",
+ "He divides all working life into four paths: the farmer who reads the seasons, the merchant who lives by profit, the artisan who masters his tools, and the gentleman warrior who masters his weapons. Each is a full discipline, and each person should feel some pull toward understanding it.",
+ "Strategy, he says, has been cheapened. People treat it like a flower to be shown off — 'This Dojo' against 'That Dojo' — chasing profit and decoration instead of substance. He quotes an old saying: immature strategy is the cause of grief."
+ ]},
+
+{book:"Ground Book", title:"The Carpenter and the Commander", quote:"The teacher is as a needle, the disciple is as thread.",
+ body:[
+ "To explain strategy, Musashi reaches for an unlikely comparison: the foreman carpenter. A good foreman knows the rules of the country and the rules of houses, chooses timber wisely — straight, unblemished wood for the visible pillars; strong but gnarled wood used discreetly; weak wood set aside for scaffolding and firewood.",
+ "He assigns work by ability: the most skilled shape the fine joinery, the least skilled lay floor joists, and everyone is watched, encouraged, and never asked the unreasonable. 'This is the same as the principle of strategy,' Musashi writes — a commander, like a foreman, succeeds by knowing his people's strengths and placing them well.",
+ "The carpenter's own mark of mastery isn't decoration. It's that nothing warps, no joint misaligns, and the work is planed true. Simple, structural integrity — that is the standard Musashi holds strategy to as well."
+ ]},
+
+{book:"Ground Book", title:"Five Books, One Spirit", quote:"From one thing, know ten thousand things.",
+ body:[
+ "Musashi previews the shape of his whole book. <strong>Ground</strong> lays the road — the basic terrain of his school. <strong>Water</strong> takes its spirit from water itself: shapeless, adopting the form of whatever holds it, sometimes a trickle and sometimes a wild sea. Master one duel truly, he says, and you have the principle for ten million.",
+ "<strong>Fire</strong> is about the moment of combat — fierce whether the fight is one-on-one or an army against an army. <strong>Wind</strong> is not about his own school at all; it surveys and critiques other traditions, because 'it is difficult to know yourself if you do not know others.'",
+ "And <strong>Void</strong> — the last and strangest — is what has no beginning and no end. Reaching it, he says, paradoxically means no longer grasping at a principle at all."
+ ]},
+
+{book:"Ground Book", title:"Two Swords, One School", quote:"It is false not to draw a weapon, and to die with it undrawn.",
+ body:[
+ "Musashi's school is named Ni To — 'two swords' — because he trains students to wield the long sword and the companion sword together, one in each hand, rather than gripping the long sword with both.",
+ "His reasoning is practical, not stylistic: a warrior on horseback, on muddy ground, or in a crowd often only has one hand free. If you've only ever trained two-handed, that hand is untrained and useless in the moment it matters most.",
+ "He also surveys the other weapons of his era — spear, halberd, bow, gun — noting exactly where each earns its keep and where each fails: the gun dominates before swords are crossed and becomes deadweight the instant they are; the bow lets you watch your own shot correct itself in flight, which gunfire never allows.",
+ "His closing advice here still lands: don't fall in love with one weapon. Overfamiliarity with a favorite is as much a flaw as never learning it."
+ ]},
+
+{book:"Ground Book", title:"Timing Is Everything", quote:"There is timing in the whole life of the warrior, in his thriving and declining.",
+ body:[
+ "Before closing the Ground Book, Musashi lingers on timing — and insists it governs far more than combat. It's in music and dance, in a merchant's rise and fall of capital, in a warrior's whole life of thriving and decline.",
+ "The skill isn't just feeling rhythm; it's discerning which timing applies to a given moment, including the timing your opponent doesn't expect you to see.",
+ "He ends the Ground Book with nine plain principles for anyone who wants to learn his strategy — worth reading slowly:",
+ "<em>1. Do not think dishonestly. 2. The Way is in training. 3. Become acquainted with every art. 4. Know the Ways of all professions. 5. Distinguish between gain and loss in worldly matters. 6. Develop intuitive judgement for everything. 7. Perceive what cannot be seen. 8. Pay attention even to trifles. 9. Do nothing which is of no use.</em>"
+ ]},
+
+{book:"Water Book", title:"A Mind Like Water", quote:"Do not let your spirit be influenced by your body, or your body be influenced by your spirit.",
+ body:[
+ "The Water Book opens with something closer to meditation instruction than swordsmanship. In combat and in ordinary life, Musashi says, your bearing should be the same: determined, but calm. Not tense, not reckless.",
+ "He describes a very specific inner balance — spirit settled but not biased, body relaxed but never slack, an elevated spirit is weak and so is a lowered one. And above all: don't let the enemy read your spirit on your face.",
+ "This chapter also gives instruction on physical stance down to the smallest detail — the line of the neck, the set of the shoulders, the brace of the abdomen — because Musashi's central claim is that your combat stance and your everyday stance should be the same stance. There's no separate 'game face.'"
+ ]},
+
+{book:"Water Book", title:"How to Look, How to Stand", quote:"See distant things as if they were close, and take a distanced view of close things.",
+ body:[
+ "Musashi separates the gaze into two functions: <em>perception</em> (strong, wide, reading the whole situation) and <em>sight</em> (weaker, narrow, seeing only the literal object). Most people over-rely on sight — watching the enemy's sword tip — when perception is what actually wins fights.",
+ "He also gives very concrete footwork advice: toes lightly floating, heels planted firm, and movement that never departs from how you'd walk normally in the street. He specifically dislikes 'jumping-foot,' 'floating-foot,' and 'fixed-steps' — anything performative rather than natural.",
+ "The chapter introduces the Five Attitudes — Upper, Middle, Lower, Right Side, Left Side — all five existing for exactly one purpose: to cut the enemy. The Middle attitude, he says, is the heart of them all, like a commander around whom the other four take their positions."
+ ]},
+
+{book:"Water Book", title:"The Five Approaches", quote:"If you try to wield the long sword quickly you will mistake the Way.",
+ body:[
+ "Here Musashi teaches five concrete sword techniques, each built from one of the five attitudes — deflecting an attack and cutting the arms from below; cutting from above the instant the enemy attacks; scooping up from the Lower attitude; parrying and cutting across from the Left; crossing up into the Upper attitude from the Right.",
+ "He's careful to say these can't really be learned from a book — 'I cannot describe in detail how to use these five approaches... you must become well acquainted' through repetition. The passage functions almost like a warning against the very format he's writing in.",
+ "The deeper point beneath the technique: don't rush the sword. Speed applied wrong just means 'short sword chopping' — a weak, hasty motion that cannot actually cut a man down."
+ ]},
+
+{book:"Water Book", title:"Attitude Without Attitude", quote:"The primary thing when you take a sword in your hands is your intention to cut the enemy, whatever the means.",
+ body:[
+ "This is one of the book's most quoted ideas: 'Attitude No-Attitude.' The five stances exist, but Musashi insists none of them should be held rigidly — from Upper you can ease toward Middle, from Middle you can rise toward Upper, and so on, fluidly, according to the situation.",
+ "Whatever the position of the sword, if the intention to cut is present, it's serving its purpose. Parrying, hitting, or touching the enemy's blade means nothing unless it flows directly into the cut itself. Musashi's line is blunt: if you're only thinking about hitting or blocking, you will not actually cut him.",
+ "He also introduces 'In One Timing' — striking the instant the enemy is still undecided, before he can withdraw, break, or attack — and the 'Abdomen Timing of Two' — a feint that draws out the enemy's tension so you can strike the moment he relaxes."
+ ]},
+
+{book:"Water Book", title:"Named Cuts", quote:"Cut him as slowly as possible... following your body like stagnant water.",
+ body:[
+ "Musashi names several specific cutting techniques, each a small poem as much as a technique. The <strong>Flowing Water Cut</strong> is used when locked blade-to-blade and the enemy tries to spring back — you follow him with your whole body, unhurried, like water that has nowhere else to go.",
+ "The <strong>Continuous Cut</strong> strikes head, hands, and legs in one uninterrupted sweep. The <strong>Fire and Stones Cut</strong> is the opposite in feel — an instantaneous full-body strike the moment the swords touch, no telegraphing at all.",
+ "The <strong>Red Leaves Cut</strong> is aimed not at the man but at his grip — striking the sword itself so it falls from his hand, like a leaf finally letting go of its branch in autumn."
+ ]},
+
+{book:"Water Book", title:"Closing the Distance", quote:"Stick to the enemy... so there is not the slightest gap.",
+ body:[
+ "This section is about the body more than the blade. The 'Chinese Monkey's Body' means closing distance without ever extending your arms first — going in with your whole body rather than reaching. The 'Glue and Lacquer Emulsion Body' means once you're close, you stay close: head, torso and legs arriving together, no gap the enemy can slip through.",
+ "Musashi also teaches 'to strive for height' — physically out-postures the opponent, stretching legs, hips and neck to stand taller — and 'the Body Strike,' literally checking the enemy with your shoulder to knock him back before the sword ever moves.",
+ "There's real physical humility packed into this section: people, he notes, tend to send their head and legs forward quickly while their torso lags behind — a mistake he specifically warns against."
+ ]},
+
+{book:"Water Book", title:"Against Many, In One Cut", quote:"Cut the enemies down as they advance, crushing them in the direction from which they attack.",
+ body:[
+ "Musashi closes the Water Book with instruction on facing multiple opponents at once — draw both swords, take a wide stance, and read the order in which enemies will attack rather than waiting passively.",
+ "The image he uses is striking: drive the enemies together 'as if tying a line of fishes,' herding them into a cluster so density itself becomes their weakness, then cut through without giving them room to move.",
+ "He ends the book with 'One Cut' — the idea that with enough training, victory becomes something that arises naturally from the heart, rather than something willed by conscious calculation — and a final direct address to the reader: study this, one item at a time, and understanding will come gradually through actual practice, not just from reading."
+ ]},
+
+{book:"Fire Book", title:"Choosing Your Ground", quote:"You must look down on the enemy, and take up your attitude on slightly higher places.",
+ body:[
+ "The Fire Book turns to combat itself, and opens with something almost architectural: environment as a weapon. Stand with the sun behind you, or at worst on your right. Keep an exit or fire source behind you, never in front. Take the higher ground whenever it's available.",
+ "Musashi is equally specific about using terrain against an opponent — chase him toward thresholds, pillars, and awkward footing; drive him into corners where he can't see his own situation; never let him choose where the fight happens.",
+ "It reads less like poetic wisdom and more like a field manual, which is exactly the register the Fire Book holds throughout."
+ ]},
+
+{book:"Fire Book", title:"Three Ways to Take the Lead", quote:"Because you can win quickly by taking the lead, it is one of the most important things in strategy.",
+ body:[
+ "Musashi names three ways to seize initiative. <strong>Ken No Sen</strong> — forestalling by attacking first, sometimes with visible force, sometimes with a calm, almost hidden pressure. <strong>Tai No Sen</strong> — forestalling as the enemy attacks, feigning weakness, then striking the instant he commits or relaxes. <strong>Tai Tai No Sen</strong> — forestalling when both sides attack simultaneously, reading his weak point as he closes and beating him to it.",
+ "The unifying idea: 'forestalling' doesn't strictly mean attacking first in time. It means controlling the encounter's rhythm so thoroughly that even the enemy's own attack ends up serving your plan.",
+ "He's careful to note this can't really be reduced to rules — you must read the specific situation and judge which of the three applies."
+ ]},
+
+{book:"Fire Book", title:"Holding Down a Pillow", quote:"Suppress the enemy's useful actions but allow his useless actions.",
+ body:[
+ "This chapter's central image is vivid: don't let the enemy's head rise. Check his cut before it lands, his jump before he leaves the ground, even the first syllable of his shout — Musashi imagines interrupting an attack at the very first sound of its beginning.",
+ "'Crossing at a Ford' extends the metaphor to timing on a larger scale — like a captain choosing the exact moment and route to cross open water, a strategist commits only when conditions favor him, and if the wind shifts partway across, adapts rather than turning back.",
+ "'To Know the Times' rounds this out: reading whether the enemy's spirit and formation are rising or already waning, and moving only once you can see that clearly."
+ ]},
+
+{book:"Fire Book", title:"Psychological Pressure", quote:"To become the enemy... he who is shut inside is a pheasant, he who enters to arrest is a hawk.",
+ body:[
+ "Several of Musashi's most memorable ideas cluster here. 'To become the enemy' means literally imagining the fight from his position — a trapped man feels the whole world against him, and thinking this way strips away the fear of an opponent's supposed strength.",
+ "'To move the shade' means feinting to provoke an enemy who is hiding his intentions into accidentally revealing them. 'To hold down a shadow' is the reverse — when you can already see his intention, suppress it before it fully forms.",
+ "'To pass on' is almost hypnotic: Musashi notes that sleepiness, yawning, and mood are contagious, and a fighter can deliberately project calm, boredom, or carelessness to induce the same state in an opponent — then strike the instant it takes hold."
+ ]},
+
+{book:"Fire Book", title:"Breaking the Enemy's Balance", quote:"Attack without warning where the enemy is not expecting it.",
+ body:[
+ "This section is a small catalogue of destabilization tactics. Loss of balance can come from danger, hardship, or surprise — and a strategist manufactures all three deliberately. Fright, similarly, can come from a shout, a flanking move, or making a small force look larger than it is.",
+ "'To soak in' describes staying entangled with an opponent rather than pulling back when a struggle stalls — Musashi warns that separating too early can cost you the exact opening that close contact was about to create.",
+ "'To injure the corners' applies the physics of leverage to combat: strong things resist being pushed head-on, but their edges give way easily — topple the corner and the whole structure follows."
+ ]},
+
+{book:"Fire Book", title:"Voice, Momentum, and the Killing Blow", quote:"We shout in the wake of our victory. This is called 'before and after voice.'",
+ body:[
+ "Musashi assigns the voice real tactical weight — a battle cry before the fight to announce intent, a lower shout during the fight to hold rhythm, and a shout after victory to seal it. Crucially, you never shout at the same instant as the cut itself; the voice and the blade take turns.",
+ "'To mingle' describes attacking one strongpoint, disengaging the instant it breaks, and moving to the next — advancing along what Musashi calls a winding mountain path, never retreating even one step.",
+ "'To crush' is about finishing decisively once an opponent is already weaker or disorganized — Musashi warns explicitly against a half-hearted finish, since a lightly crushed enemy can recover."
+ ]},
+
+{book:"Fire Book", title:"Not Repeating Yourself", quote:"If the enemy thinks of the mountains, attack like the sea.",
+ body:[
+ "The 'Mountain-Sea Change' is a simple but sharp rule: never use the same failed technique a third time. If something doesn't work twice, the answer isn't persistence — it's variety. Musashi frames this almost as a law of psychology: predictability is what actually gets you beaten.",
+ "'To penetrate the depths' addresses the difference between beating someone technically and actually breaking their will — an opponent can be defeated on the surface while remaining spiritually undefeated underneath, and Musashi insists the deeper victory is the one that matters.",
+ "The book closes with 'Rat's Head, Ox's Neck' — the discipline of zooming between minute detail and the big picture without getting stuck in either — and 'The Body of a Rock,' the state Musashi describes as the endpoint of all this training: a stillness that ten thousand things cannot move."
+ ]},
+
+{book:"Wind Book", title:"Critiquing the Competition", quote:"'One inch gives the hand advantage' — these are the idle words of one who does not know strategy.",
+ body:[
+ "The Wind Book steps outside Musashi's own school to critique others — and he opens by taking aim at schools obsessed with extra-long swords. Relying on reach, he argues, is a symptom of weak spirit: real strategy should let you win with a short sword against a long one, not just avoid the fight by staying at a safe distance.",
+ "He's equally unimpressed by schools that fixate on 'strong' sword-swinging. Cutting with excess force just makes your stroke coarse and drags your own blade off-target when it meets resistance. The goal is never to cut 'strongly' or 'weakly' — only to cut, decisively, with intent to kill.",
+ "Underneath the specific critiques is a consistent principle: any school built around one preferred tool or one favored trait has already narrowed itself in a way that will fail it eventually."
+ ]},
+
+{book:"Wind Book", title:"Fixed Eyes, Fixed Feet", quote:"Footballers do not fix their eyes on the ball, but by good play on the field they can perform well.",
+ body:[
+ "Musashi criticizes schools that teach students to fix their gaze on a single point — the sword tip, the hands, the face, the feet. His counter-example is almost startlingly modern: skilled footballers don't stare at the ball, yet play brilliantly, because trained perception doesn't need to fixate to see clearly.",
+ "He extends the same critique to footwork — 'floating foot,' 'jumping foot,' 'springing foot' — naming and rejecting an entire catalogue of stylized movement patterns other schools taught as advanced technique. His own answer, repeated from the Water Book, is defiantly plain: walk as you always walk in the street.",
+ "Both critiques point at the same flaw: technique that looks impressive is often technique that has replaced actual perception and natural movement with performance."
+ ]},
+
+{book:"Wind Book", title:"On Speed, and What Mastery Actually Looks Like", quote:"Really skilful people never get out of time, and are always deliberate, and never appear busy.",
+ body:[
+ "Musashi's take on speed is counterintuitive: true mastery doesn't look fast. He compares it to dance and drumming — beginners rush and their spirit becomes 'busy,' while true masters keep a rhythm that seems unhurried even when it's fast, because nothing is wasted.",
+ "He closes the Wind Book by explaining why he refuses to name specific rival schools by name in his critiques — different branches interpret the same doctrines differently, so no single account would be fair to all of them. What matters, he says, is the underlying tendency: an attachment to a favorite weapon or technique, at the expense of the wider Way.",
+ "His own school, he insists one final time, has 'neither gate nor interior' — no secret inner teaching separate from the outer one. There is only the plain, unhidden discipline of keeping your spirit true."
+ ]},
+
+{book:"Void Book", title:"What the Void Actually Means", quote:"By knowing things that exist, you can know that which does not exist. That is the void.",
+ body:[
+ "In this final, short chapter, Musashi corrects a common misunderstanding: people assume the 'void' is simply whatever they don't understand. That, he says plainly, is not the void — that's just confusion mistaking itself for depth.",
+ "The true void is reached the opposite way: through full mastery of what does exist. Study every art fully, accumulate practice daily and hourly, sharpen both your inner spirit and your outward perception — and only when nothing clouds your spirit does the true void appear.",
+ "He signs off at sixty, on the twelfth day of the fifth month, having spent a lifetime turning technique into something that, at the end, needed no technique at all. 'In the void is virtue, and no evil,' he writes. 'Spirit is nothingness.' It's a quiet, almost anticlimactic ending for a book that began with sixty undefeated duels — which may be exactly Musashi's point."
+ ]}
+];
+
+const REFLECT_PROMPTS = [
+ "Where in your own life have you mistaken decoration for real skill?",
+ "Which of the four Ways (gentleman, farmer, artisan, merchant) feels closest to how you actually spend your days?",
+ "If your own life's work were split into five books, what would they be called?",
+ "Is there one 'weapon' — a tool, habit, or skill — you rely on too heavily?",
+ "Where do you personally hold too rigid an 'attitude' when flexibility would serve you better?",
+ "What's a small, honest version of 'a mind like water' you could practice this week?",
+ "Think of a moment you rushed a decision. What would 'wielding it calmly' have looked like instead?",
+ "Where could you apply 'attitude no-attitude' — holding a plan loosely enough to adapt it mid-motion?",
+ "Which of today's named techniques feels most like something you already do without a name for it?",
+ "Where in your life do you need to 'close the distance' instead of hanging back?",
+ "When have you won an argument or contest, but not the underlying issue?",
+ "What's your version of 'choosing the high ground' before a hard conversation?",
+ "Which of the three ways to take the lead comes most naturally to you, and which is hardest?",
+ "Where do you already 'hold down a pillow' — stopping a problem before it fully forms?",
+ "Have you ever deliberately imagined a situation from your opponent's (or rival's) side? What changed?",
+ "What's a pattern you should stop repeating for a third time?",
+ "How do you use your voice — tone, timing, silence — as a tool, the way Musashi describes shouting?",
+ "What would it mean to 'not repeat yourself' in how you solve problems at work?",
+ "Which 'other school' habit (in any domain, not just swordsmanship) have you outgrown?",
+ "Where do you fixate your attention when trained instinct would actually serve you better?",
+ "What would it feel like to do something important without appearing 'busy' while doing it?",
+ "What in this whole book will you actually carry with you — not just remember, but use?"
+];
+
+const STORAGE_PREFIX = "5rings:day:";
+let currentIndex = null;
+
+async function getStatus(i){
+  try{
+    const r = await window.storage.get(STORAGE_PREFIX + i);
+    return r ? JSON.parse(r.value) : {done:false, reflection:"", date:null};
+  }catch(e){
+    return {done:false, reflection:"", date:null};
+  }
+}
+async function setStatus(i, status){
+  try{
+    await window.storage.set(STORAGE_PREFIX + i, JSON.stringify(status));
+  }catch(e){ /* ignore */ }
+}
+
+function groupByBook(){
+  const groups = [];
+  let last = null;
+  DAYS.forEach((d, i)=>{
+    if(d.book !== last){
+      groups.push({book:d.book, items:[]});
+      last = d.book;
+    }
+    groups[groups.length-1].items.push({...d, index:i});
+  });
+  return groups;
+}
+
+async function renderGrid(){
+  const container = document.getElementById('groups');
+  container.innerHTML = "";
+  const groups = groupByBook();
+  let doneCount = 0;
+  const statuses = await Promise.all(DAYS.map((_,i)=>getStatus(i)));
+  statuses.forEach(s=>{ if(s.done) doneCount++; });
+
+  groups.forEach(g=>{
+    const section = document.createElement('div');
+    section.className = 'book-group';
+    const h2 = document.createElement('h2');
+    h2.textContent = g.book;
+    section.appendChild(h2);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    g.items.forEach(item=>{
+      const tile = document.createElement('div');
+      const st = statuses[item.index];
+      tile.className = 'tile' + (st.done ? ' done' : '');
+      tile.innerHTML = `
+        <div class="seal-mark">読</div>
+        <div class="day-no">Day ${item.index+1}</div>
+        <div class="day-title">${item.title}</div>
+      `;
+      tile.addEventListener('click', ()=>openDay(item.index));
+      grid.appendChild(tile);
+    });
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
+
+  document.getElementById('statDone').textContent = doneCount;
+  document.getElementById('statPct').textContent = Math.round((doneCount/DAYS.length)*100) + "%";
+  document.getElementById('scrollFill').style.width = Math.round((doneCount/DAYS.length)*100) + "%";
+  document.getElementById('statStreak').textContent = computeStreak(statuses);
+}
+
+function computeStreak(statuses){
+  const dates = statuses.filter(s=>s.done && s.date).map(s=>s.date).sort();
+  if(dates.length===0) return 0;
+  const uniqueDays = [...new Set(dates)];
+  let streak = 1;
+  let maxStreak = 1;
+  for(let i=1;i<uniqueDays.length;i++){
+    const prev = new Date(uniqueDays[i-1]);
+    const cur = new Date(uniqueDays[i]);
+    const diff = (cur - prev) / (1000*60*60*24);
+    if(diff === 1){ streak++; maxStreak = Math.max(maxStreak, streak); }
+    else if(diff > 1){ streak = 1; }
+  }
+  return maxStreak;
+}
+
+async function openDay(i){
+  currentIndex = i;
+  const d = DAYS[i];
+  document.getElementById('sheetBook').textContent = d.book + " · Day " + (i+1) + " of " + DAYS.length;
+  document.getElementById('sheetTitle').textContent = d.title;
+  document.getElementById('sheetBody').innerHTML = d.body.map(p=>`<p>${p}</p>`).join('');
+  document.getElementById('sheetQuote').textContent = "\u201C" + d.quote + "\u201D";
+  document.getElementById('reflectLabel').textContent = REFLECT_PROMPTS[i] || "Your reflection";
+  document.getElementById('saveNote').textContent = "";
+
+  const status = await getStatus(i);
+  document.getElementById('reflectInput').value = status.reflection || "";
+  const btn = document.getElementById('markBtn');
+  btn.textContent = status.done ? "Sealed — tap to unseal" : "Seal this day as read";
+  btn.className = "mark-btn" + (status.done ? " done" : "");
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeDay(){
+  document.getElementById('overlay').classList.remove('open');
+  currentIndex = null;
+}
+
+document.getElementById('closeBtn').addEventListener('click', closeDay);
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'overlay') closeDay();
+});
+
+document.getElementById('markBtn').addEventListener('click', async ()=>{
+  if(currentIndex === null) return;
+  const status = await getStatus(currentIndex);
+  const reflection = document.getElementById('reflectInput').value;
+  const newDone = !status.done;
+  const today = new Date().toISOString().slice(0,10);
+  const newStatus = {done:newDone, reflection, date: newDone ? today : status.date};
+  await setStatus(currentIndex, newStatus);
+  const btn = document.getElementById('markBtn');
+  btn.textContent = newDone ? "Sealed — tap to unseal" : "Seal this day as read";
+  btn.className = "mark-btn" + (newDone ? " done" : "");
+  document.getElementById('saveNote').textContent = newDone ? "Saved to your reading log." : "Unsealed.";
+  await renderGrid();
+});
+
+let saveTimer = null;
+document.getElementById('reflectInput').addEventListener('input', ()=>{
+  if(currentIndex === null) return;
+  clearTimeout(saveTimer);
+  document.getElementById('saveNote').textContent = "Saving...";
+  saveTimer = setTimeout(async ()=>{
+    const status = await getStatus(currentIndex);
+    status.reflection = document.getElementById('reflectInput').value;
+    await setStatus(currentIndex, status);
+    document.getElementById('saveNote').textContent = "Reflection saved.";
+  }, 700);
+});
+
+renderGrid();
+</script>
+</body>
+</html>
